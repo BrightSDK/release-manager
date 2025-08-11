@@ -18,18 +18,12 @@ const { glob } = require('glob');
 class ReleaseManager {
     constructor(config = {}) {
         this.config = {
-            // Default configuration
+            // Default configuration - most options now have sensible defaults
             artifactsPattern: 'dist/**/*.{js,css,map}',
             outputDir: 'releases',
             packageJsonPath: './package.json',
-            createVersionDirectories: true,
-            createLatestCopy: true,
-            createVersionedCopy: true,
-            fileNameTemplate: '{basename}-{version}{ext}',
-            latestFileTemplate: '{basename}-latest{ext}',
-            versionDirectories: ['major', 'minor'], // Default to major and minor only
+            versionDirectories: ['major', 'minor', 'patch', 'latest'], // Creates: v1/, v1.2/, v1.2.3/, latest/
             preserveDirectory: false,
-            copySourceMaps: true,
             generateManifest: true,
             ...config
         };
@@ -158,26 +152,34 @@ class ReleaseManager {
         console.log(`📦 Processing: ${path.relative(process.cwd(), sourceFile)}`);
 
         const allOutputs = [];
+        const parsedPath = path.parse(sourceFile);
 
-        // Create version directories if configured
-        if (this.config.createVersionDirectories) {
-            for (const versionType of this.config.versionDirectories) {
+        // Create version directories based on versionDirectories config
+        for (const versionType of this.config.versionDirectories) {
+            let targetDir;
+
+            if (versionType === 'latest') {
+                targetDir = path.join(this.config.outputDir, 'latest');
+            } else {
                 const versionValue = this.version[versionType];
-                const versionDir = path.join(this.config.outputDir, `v${versionValue}`);
-
-                // For version directories, just copy the original file without version suffix
-                const parsedPath = path.parse(sourceFile);
-                const outputPath = path.join(versionDir, parsedPath.base);
-
-                await fs.ensureDir(versionDir);
-                await fs.copy(sourceFile, outputPath);
-                allOutputs.push(outputPath);
+                targetDir = path.join(this.config.outputDir, `v${versionValue}`);
             }
-        }
 
-        // Copy to root output directory
-        const rootOutputs = await this.copyArtifact(sourceFile, this.config.outputDir);
-        allOutputs.push(...rootOutputs);
+            // Determine output path - preserve directory structure if configured
+            let outputPath;
+            if (this.config.preserveDirectory) {
+                // Keep the relative path from the source
+                const relativePath = path.relative(process.cwd(), sourceFile);
+                outputPath = path.join(targetDir, relativePath);
+            } else {
+                // Just the filename
+                outputPath = path.join(targetDir, parsedPath.base);
+            }
+
+            await fs.ensureDir(path.dirname(outputPath));
+            await fs.copy(sourceFile, outputPath);
+            allOutputs.push(outputPath);
+        }
 
         return allOutputs;
     }
@@ -185,27 +187,94 @@ class ReleaseManager {
     async generateManifest(allOutputs) {
         if (!this.config.generateManifest) return null;
 
-        const manifest = {
-            package: this.packageInfo.name,
-            version: this.version.full,
-            generatedAt: new Date().toISOString(),
-            files: allOutputs.map(filePath => ({
-                path: path.relative(this.config.outputDir, filePath),
-                size: fs.statSync(filePath).size,
-                type: path.extname(filePath).slice(1)
-            })),
-            versions: {
-                major: this.version.major,
-                minor: this.version.minor,
-                patch: this.version.patch
+        const manifestPaths = [];
+
+        // Group files by directory
+        const filesByDirectory = {};
+        allOutputs.forEach(filePath => {
+            const dir = path.dirname(filePath);
+            if (!filesByDirectory[dir]) {
+                filesByDirectory[dir] = [];
             }
-        };
+            filesByDirectory[dir].push(filePath);
+        });
 
-        const manifestPath = path.join(this.config.outputDir, 'manifest.json');
-        fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+        // Generate manifest for each directory
+        for (const [dir, files] of Object.entries(filesByDirectory)) {
+            const dirName = path.basename(dir);
+            let manifestData;
 
-        console.log(`📋 Generated manifest: ${path.relative(process.cwd(), manifestPath)}`);
-        return manifestPath;
+            if (dir === this.config.outputDir) {
+                // Root directory - comprehensive manifest
+                manifestData = {
+                    package: this.packageInfo.name,
+                    version: this.version.full,
+                    generatedAt: new Date().toISOString(),
+                    files: files.map(filePath => ({
+                        path: path.relative(dir, filePath),
+                        size: fs.statSync(filePath).size,
+                        type: path.extname(filePath).slice(1)
+                    })),
+                    versions: {
+                        major: this.version.major,
+                        minor: this.version.minor,
+                        patch: this.version.patch
+                    }
+                };
+            } else {
+                // Directory-specific manifest
+                let versionInfo = {};
+
+                if (dirName === 'latest') {
+                    versionInfo = {
+                        type: 'latest',
+                        version: this.version.full
+                    };
+                } else if (dirName.startsWith('v')) {
+                    const versionValue = dirName.slice(1);
+                    if (versionValue === this.version.full) {
+                        versionInfo = {
+                            type: 'specific',
+                            version: versionValue
+                        };
+                    } else if (versionValue === this.version.major) {
+                        versionInfo = {
+                            type: 'major',
+                            version: versionValue,
+                            fullVersion: this.version.full
+                        };
+                    } else if (versionValue === this.version.minor) {
+                        versionInfo = {
+                            type: 'minor',
+                            version: versionValue,
+                            fullVersion: this.version.full
+                        };
+                    }
+                }
+
+                manifestData = {
+                    package: this.packageInfo.name,
+                    generatedAt: new Date().toISOString(),
+                    files: files.map(filePath => ({
+                        path: path.relative(dir, filePath),
+                        size: fs.statSync(filePath).size,
+                        type: path.extname(filePath).slice(1)
+                    })),
+                    ...versionInfo
+                };
+            }
+
+            const manifestPath = path.join(dir, 'manifest.json');
+            fs.writeFileSync(manifestPath, JSON.stringify(manifestData, null, 2), 'utf8');
+            manifestPaths.push(manifestPath);
+        }
+
+        console.log(`📋 Generated ${manifestPaths.length} manifest(s):`);
+        manifestPaths.forEach(manifestPath => {
+            console.log(`   - ${path.relative(process.cwd(), manifestPath)}`);
+        });
+
+        return manifestPaths;
     }
 
     async release() {
@@ -224,15 +293,17 @@ class ReleaseManager {
                 allOutputs.push(...outputs);
             }
 
-            // Generate manifest
-            const manifestPath = await this.generateManifest(allOutputs);
-            if (manifestPath) {
-                allOutputs.push(manifestPath);
+            // Generate manifest(s)
+            const manifestPaths = await this.generateManifest(allOutputs);
+            if (manifestPaths && manifestPaths.length > 0) {
+                allOutputs.push(...manifestPaths);
             }
 
             console.log(`✅ Release completed successfully!`);
             console.log(`📦 Files created:`);
-            allOutputs.forEach(file => console.log(`   - ${path.relative(process.cwd(), file)}`));
+            allOutputs
+                .sort((a, b) => path.relative(process.cwd(), a).localeCompare(path.relative(process.cwd(), b)))
+                .forEach(file => console.log(`   - ${path.relative(process.cwd(), file)}`));
 
             return allOutputs;
 

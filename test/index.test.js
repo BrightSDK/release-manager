@@ -55,7 +55,7 @@ describe('ReleaseManager', () => {
             const manager = new ReleaseManager();
             expect(manager.config.artifactsPattern).toBe('dist/**/*.{js,css,map}');
             expect(manager.config.outputDir).toBe('releases');
-            expect(manager.config.createVersionDirectories).toBe(true);
+            expect(manager.config.versionDirectories).toEqual(['major', 'minor', 'patch', 'latest']);
         });
 
         test('should merge custom config with defaults', () => {
@@ -127,16 +127,14 @@ describe('ReleaseManager', () => {
             const manager = new ReleaseManager({
                 artifactsPattern: 'dist/bundle.min.js',
                 outputDir: 'releases',
-                createVersionDirectories: false,
-                createVersionedCopy: true,
-                createLatestCopy: true
+                versionDirectories: ['patch', 'latest'] // This will create v1.2.3 and latest directories
             });
 
             await manager.release();
 
-            // Check if files were created (version should be before .min)
-            const versionedFile = path.join('releases', 'bundle-1.2.3.min.js');
-            const latestFile = path.join('releases', 'bundle-latest.min.js');
+            // Check if files were created in new directory structure
+            const versionedFile = path.join('releases', 'v1.2.3', 'bundle.min.js');
+            const latestFile = path.join('releases', 'latest', 'bundle.min.js');
 
             expect(await fs.pathExists(versionedFile)).toBe(true);
             expect(await fs.pathExists(latestFile)).toBe(true);
@@ -178,32 +176,32 @@ describe('ReleaseManager', () => {
                 artifactsPattern: 'dist/**/*.js',
                 outputDir: 'releases',
                 preserveDirectory: true,
-                createVersionDirectories: false
+                versionDirectories: ['patch'] // Use patch to get v1.2.3 directory
             });
 
             await manager.release();
 
-            // Check if directory structure is preserved
-            expect(await fs.pathExists('releases/dist/components/component-1.2.3.js')).toBe(true);
+            // Check if directory structure is preserved in new structure
+            expect(await fs.pathExists('releases/v1.2.3/dist/components/component.js')).toBe(true);
         });
 
         test('should generate manifest file', async () => {
             const manager = new ReleaseManager({
                 artifactsPattern: 'dist/**/*.{js,css}',
                 outputDir: 'releases',
-                generateManifest: true,
-                createVersionDirectories: false
+                versionDirectories: ['patch'] // Use patch to get v1.2.3 directory
             });
 
             await manager.release();
 
-            const manifestPath = path.join('releases', 'manifest.json');
+            // Check manifest exists in version directory
+            const manifestPath = path.join('releases', 'v1.2.3', 'manifest.json');
             expect(await fs.pathExists(manifestPath)).toBe(true);
 
             const manifest = await fs.readJson(manifestPath);
             expect(manifest.package).toBe('@test/sample-package');
             expect(manifest.version).toBe('1.2.3');
-            expect(manifest.files).toHaveLength(4); // 2 original + 2 latest files
+            expect(manifest.files).toHaveLength(2); // Just the files in this directory
             expect(manifest.files.some(f => f.path.includes('bundle'))).toBe(true);
         });
     });

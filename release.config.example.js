@@ -2,84 +2,41 @@
 // Copy this file to your project as 'release.config.js'
 
 module.exports = {
-    // Artifacts to process (glob pattern)
-    // These should be pre-built files from your bundler
+    // Artifacts to process (glob pattern for pre-built files)
     artifactsPattern: 'dist/**/*.{js,css,map}',
 
     // Output directory for releases
     outputDir: 'releases',
 
-    // Path to package.json (for version info)
-    packageJsonPath: './package.json',
+    // Which version directories to create (each gets own directory + manifest)
+    // Available: 'major', 'minor', 'patch', 'latest'
+    versionDirectories: ['major', 'minor', 'patch', 'latest'], // Default: Creates all 4 directories
 
-    // Create version-specific directories (v1, v1.2, v1.2.3)
-    createVersionDirectories: true,
-
-    // Create latest copies in the output root
-    createLatestCopy: true,
-
-    // Create versioned copies in the output root
-    createVersionedCopy: true,
-
-    // File naming templates
-    fileNameTemplate: '{basename}-{version}{ext}',
-    latestFileTemplate: '{basename}-latest{ext}',
-
-    // Which version directories to create
-    versionDirectories: ['major', 'minor', 'patch'],
-
-    // Preserve directory structure from artifacts
-    preserveDirectory: false,
-
-    // Copy source maps along with JS/CSS files
-    copySourceMaps: true,
-
-    // Generate a manifest.json with file information
-    generateManifest: true
+    // Preserve source directory structure in each version directory
+    preserveDirectory: true
 };
 
-// Example configurations for different project types:
+// Most common configurations:
 
-// For webpack output:
+// JavaScript Library (simple):
 // module.exports = {
-//     artifactsPattern: 'dist/**/*.{js,css}',
-//     outputDir: 'releases',
-//     preserveDirectory: true,
-//     fileNameTemplate: '{basename}-{version}{ext}',
-//     versionDirectories: ['major', 'minor']
+//     artifactsPattern: 'dist/*.min.js'
 // };
 
-// For rollup output:
+// React/Vue App:
 // module.exports = {
-//     artifactsPattern: 'build/*.{js,css,map}',
-//     outputDir: 'cdn',
-//     createVersionDirectories: true,
-//     generateManifest: true
+//     artifactsPattern: 'build/**/*.{js,css}',
+//     preserveDirectory: true
 // };
 
-// For simple JS library:
+// CSS Framework:
 // module.exports = {
-//     artifactsPattern: 'lib/my-library.min.js',
-//     outputDir: 'releases',
-//     fileNameTemplate: 'my-library-{version}.min.js',
-//     latestFileTemplate: 'my-library-latest.min.js',
-//     versionDirectories: ['major', 'minor']
+//     artifactsPattern: 'dist/**/*.css',
+//     versionDirectories: ['major', 'latest'] // Major version + latest: v1/, latest/
 // };
 
-// For CSS framework:
+// Full versioning with latest:
 // module.exports = {
-//     artifactsPattern: 'dist/**/*.{css,css.map}',
-//     outputDir: 'releases',
-//     preserveDirectory: true,
-//     fileNameTemplate: '{basename}-{version}{ext}',
-//     createVersionDirectories: true
-// };
-
-// For development/staging (no versioning):
-// module.exports = {
-//     artifactsPattern: 'build/**/*',
-//     outputDir: 'staging',
-//     createVersionDirectories: false,
-//     createVersionedCopy: false,
-//     generateManifest: false
+//     artifactsPattern: 'dist/**/*',
+//     versionDirectories: ['major', 'minor', 'patch', 'latest'] // v1/, v1.2/, v1.2.3/, latest/
 // };
