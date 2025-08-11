@@ -15,13 +15,13 @@ A universal artifact management and distribution tool for organizing pre-built f
 ## Installation
 
 ```bash
-npm install -g @brightsdk/release-manager
+npm install -g https://brightsdk.github.io/packages/bright-sdk-tool-release-manager/latest.tgz
 ```
 
 Or as a development dependency:
 
 ```bash
-npm install --save-dev @brightsdk/release-manager
+npm install --save-dev https://brightsdk.github.io/packages/bright-sdk-tool-release-manager/latest.tgz
 ```
 
 ## Quick Start
