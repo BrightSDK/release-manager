@@ -2,41 +2,32 @@
 // Copy this file to your project as 'release.config.js'
 
 module.exports = {
-    // Artifacts to process (glob pattern for pre-built files)
-    artifactsPattern: 'dist/**/*.{js,css,map}',
+    // Required: Pattern to find your build artifacts
+    artifactsPattern: 'dist/**/*.{js,css,map}'
 
-    // Output directory for releases
-    outputDir: 'releases',
-
-    // Which version directories to create (each gets own directory + manifest)
-    // Available: 'major', 'minor', 'patch', 'latest'
-    versionDirectories: ['major', 'minor', 'patch', 'latest'], // Default: Creates all 4 directories
-
-    // Preserve source directory structure in each version directory
-    preserveDirectory: true
+    // All other options have sensible defaults:
+    // - outputDir: 'releases'
+    // - versionDirectories: ['major', 'minor', 'patch', 'latest']
+    // - preserveDirectory: false
+    // - generateManifest: true
+    // - packageJsonPath: './package.json'
 };
 
-// Most common configurations:
+// Common use cases:
 
-// JavaScript Library (simple):
+// Simple JavaScript library:
 // module.exports = {
 //     artifactsPattern: 'dist/*.min.js'
 // };
 
-// React/Vue App:
+// React/Vue app with directory structure:
 // module.exports = {
 //     artifactsPattern: 'build/**/*.{js,css}',
 //     preserveDirectory: true
 // };
 
-// CSS Framework:
+// Only specific versions:
 // module.exports = {
 //     artifactsPattern: 'dist/**/*.css',
-//     versionDirectories: ['major', 'latest'] // Major version + latest: v1/, latest/
-// };
-
-// Full versioning with latest:
-// module.exports = {
-//     artifactsPattern: 'dist/**/*',
-//     versionDirectories: ['major', 'minor', 'patch', 'latest'] // v1/, v1.2/, v1.2.3/, latest/
+//     versionDirectories: ['major', 'latest']
 // };

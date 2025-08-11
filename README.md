@@ -5,12 +5,12 @@ A universal artifact management and distribution tool for organizing pre-built f
 ## Features
 
 - 📦 **Universal Compatibility**: Works with artifacts from any bundler
-- 🗂️ **Intelligent Organization**: Organizes artifacts into versioned directory structures
-- 🏷️ **Flexible Naming**: Customizable file naming with version placeholders
-- 📝 **Manifest Generation**: Creates detailed manifest files for releases
-- 🔄 **Latest Copies**: Automatically creates latest version links
+- 🗂️ **Directory-Based Organization**: Creates separate directories for each version level
+- 📝 **Individual Manifests**: Generates manifest files for each version directory
+- 🏷️ **Complete Versioning**: Creates major, minor, patch, and latest directories by default
 - 📁 **Directory Preservation**: Maintains source directory structures when needed
 - 🎯 **Pattern Matching**: Uses glob patterns for flexible artifact selection
+- ✅ **Alphabetical Output**: Files are listed in sorted order for better readability
 
 ## Installation
 
@@ -35,10 +35,9 @@ release-manager --artifacts "dist/**/*.{js,css,map}"
 
 This will:
 - Find all JS, CSS, and map files in your `dist` directory
-- Create versioned copies (e.g., `bundle-1.2.3.min.js`)
-- Create latest copies (e.g., `bundle-latest.min.js`)
-- Organize them in version directories (e.g., `releases/v1.2/`)
-- Generate a manifest file
+- Create 4 version directories: `v1/`, `v1.2/`, `v1.2.3/`, `latest/`
+- Copy files to each directory with individual manifests
+- Organize them for CDN deployment
 
 ## Usage Examples
 
@@ -68,8 +67,8 @@ release-manager --artifacts "build/**/*" --preserve-dirs
 # 1. Build with esbuild
 npx esbuild src/index.js --bundle --outdir=out
 
-# 2. Organize artifacts
-release-manager --artifacts "out/*.js" --no-latest
+# 2. Organize artifacts (only specific directories)
+release-manager --artifacts "out/*.js" --version-dirs "major,latest"
 ```
 
 ## Configuration
@@ -83,47 +82,90 @@ Options:
   --artifacts <pattern>     Glob pattern for artifacts (default: "dist/**/*.{js,css,map}")
   --output <dir>           Output directory (default: "releases")
   --preserve-dirs          Preserve directory structure from artifacts
-  --no-version-dirs        Skip creating version directories
-  --no-versioned           Skip creating versioned copies
-  --no-latest              Skip creating latest copies
-  --no-manifest            Skip generating manifest file
+  --version-dirs <list>    Comma-separated list of version directories to create
+                          (options: major,minor,patch,latest - default: all)
+  --no-manifest            Skip generating manifest files
   --config <file>          Path to config file
 ```
 
 ### Configuration File
 
-Create a `release.config.js` file:
+Create a `release.config.js` file for minimal configuration:
 
 ```javascript
 module.exports = {
   // Glob pattern to find artifacts
-  artifactsPattern: 'dist/**/*.{js,css,map}',
+  artifactsPattern: 'dist/**/*.{js,css,map}'
 
-  // Output directory for releases
-  outputDir: 'releases',
-
-  // Version directory options
-  createVersionDirectories: true,
-  versionDirectories: ['major', 'minor', 'patch'],
-  versionDirectoryTemplate: 'v{version}',
-
-  // File copying options
-  createVersionedCopy: true,
-  createLatestCopy: true,
-  preserveDirectory: false,
-
-  // File naming templates
-  versionedFileTemplate: '{basename}-{version}{ext}',
-  latestFileTemplate: '{basename}-latest{ext}',
-
-  // Manifest options
-  generateManifest: true,
-  manifestFileName: 'manifest.json',
-
-  // Custom package.json path
-  packageJsonPath: './package.json'
+  // All other options have sensible defaults:
+  // - outputDir: 'releases'
+  // - versionDirectories: ['major', 'minor', 'patch', 'latest']
+  // - preserveDirectory: false
+  // - generateManifest: true
 };
 ```
+
+### Advanced Configuration
+
+```javascript
+module.exports = {
+  // Required: Pattern to find your artifacts
+  artifactsPattern: 'dist/**/*.{js,css,map}',
+
+  // Optional: Output directory (default: 'releases')
+  outputDir: 'releases',
+
+  // Optional: Which version directories to create (default: all)
+  versionDirectories: ['major', 'minor', 'patch', 'latest'],
+
+  // Optional: Preserve directory structure (default: false)
+  preserveDirectory: true,
+
+  // Optional: Generate manifest files (default: true)
+  generateManifest: true
+};
+```
+
+## File Organization
+
+The release manager creates a clean directory structure for your artifacts:
+
+```
+releases/
+├── v1/                        # Major version directory (1.x.x)
+│   ├── app.js                 # Original artifact files
+│   ├── styles.css
+│   └── manifest.json          # Directory manifest with file list
+├── v1.2/                      # Minor version directory (1.2.x)
+│   ├── app.js
+│   ├── styles.css
+│   └── manifest.json
+├── v1.2.3/                    # Exact version directory
+│   ├── app.js
+│   ├── styles.css
+│   └── manifest.json
+└── latest/                    # Latest version directory
+    ├── app.js
+    ├── styles.css
+    └── manifest.json
+```
+
+### Manifest Files
+
+Each directory contains a `manifest.json` with metadata:
+
+```json
+{
+  "version": "1.2.3",
+  "timestamp": "2024-01-15T10:30:00.000Z",
+  "files": [
+    "app.js",
+    "styles.css"
+  ]
+}
+```
+
+Files are listed alphabetically for consistent ordering.
 
 ## Integration Examples
 
@@ -149,7 +191,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build with webpack
+      - name: Build
         run: npm run build
 
       - name: Organize artifacts
@@ -165,8 +207,7 @@ jobs:
 {
   "scripts": {
     "build": "webpack --mode production",
-    "release": "npm run build && release-manager",
-    "release:dev": "webpack --mode development && release-manager --no-latest"
+    "release": "npm run build && release-manager"
   }
 }
 ```
@@ -180,9 +221,7 @@ const ReleaseManager = require('@brightsdk/release-manager');
 
 const manager = new ReleaseManager({
   artifactsPattern: 'dist/**/*.{js,css}',
-  outputDir: 'releases',
-  createVersionedCopy: true,
-  createLatestCopy: true
+  outputDir: 'releases'
 });
 
 async function release() {
@@ -243,50 +282,101 @@ releases/
     └── styles.css
 ```
 
-## Version Placeholders
+## Common Use Cases
 
-Use these placeholders in file naming templates:
+### CDN Distribution
 
-- `{basename}` - Original filename without extension
-- `{ext}` - File extension
-- `{version}` - Full version (e.g., "1.2.3")
-- `{major}` - Major version (e.g., "1")
-- `{minor}` - Minor version (e.g., "1.2")
-- `{patch}` - Full version (same as {version})
+Perfect for organizing files for CDN distribution with semantic versioning:
 
-## Manifest File
+```javascript
+// Users can reference specific versions
+https://cdn.example.com/my-lib/v1/bundle.js      // Latest v1.x.x
+https://cdn.example.com/my-lib/v1.2/bundle.js    // Latest v1.2.x
+https://cdn.example.com/my-lib/v1.2.3/bundle.js  // Exact version
+https://cdn.example.com/my-lib/latest/bundle.js  // Always latest
+```
 
-Generated manifest contains:
+### Library Distribution
 
-```json
-{
-  "package": "@my/package",
-  "version": "1.2.3",
-  "timestamp": "2023-11-20T10:30:00.000Z",
-  "files": [
-    {
-      "path": "bundle-1.2.3.min.js",
-      "size": 15432,
-      "hash": "sha256:abc123...",
-      "type": "versioned"
-    },
-    {
-      "path": "bundle-latest.min.js",
-      "size": 15432,
-      "hash": "sha256:abc123...",
-      "type": "latest"
-    }
-  ]
-}
+Organize library builds for different consumption patterns:
+
+```javascript
+module.exports = {
+  artifactsPattern: 'lib/**/*.{js,d.ts,css}',
+  preserveDirectory: true, // Keep lib/ structure
+  versionDirectories: ['major', 'latest'] // Only major + latest
+};
+```
+
+### Documentation Hosting
+
+Organize documentation builds:
+
+```javascript
+module.exports = {
+  artifactsPattern: 'docs/**/*.{html,css,js}',
+  outputDir: 'gh-pages',
+  preserveDirectory: true
+};
+```
+
+## Advanced Features
+
+### Directory Structure Preservation
+
+When `preserveDirectory: true`, maintains the original structure:
+
+```
+# Input
+dist/
+├── js/app.js
+└── css/styles.css
+
+# Output
+releases/
+├── v1.2.3/
+│   ├── js/app.js
+│   └── css/styles.css
+└── latest/
+    ├── js/app.js
+    └── css/styles.css
+```
+
+### Selective Version Directories
+
+Control which version directories are created:
+
+```javascript
+module.exports = {
+  artifactsPattern: 'dist/**/*.js',
+  versionDirectories: ['major', 'latest'] // Only v1/ and latest/
+};
 ```
 
 ## Best Practices
 
 1. **Build First**: Always build your project before running Release Manager
-2. **Version Control**: Include release configuration in version control
-3. **CDN Optimization**: Use appropriate file patterns for your CDN structure
-4. **Testing**: Test with different bundlers to ensure compatibility
-5. **Automation**: Integrate into CI/CD pipelines for consistent releases
+2. **Minimal Configuration**: Start with just `artifactsPattern` - defaults handle the rest
+3. **Version Control**: Include `release.config.js` in version control
+4. **CDN Optimization**: Use directory structure for clean CDN URLs
+5. **Testing**: Test with different bundlers to ensure compatibility
+6. **CI/CD Integration**: Automate releases in your deployment pipeline
+
+## Troubleshooting
+
+### Common Issues
+
+**No artifacts found**
+- Check your `artifactsPattern` glob matches your build output
+- Ensure artifacts exist before running release manager
+
+**Permission errors**
+- Make sure output directory is writable
+- Check file permissions on source artifacts
+
+**Memory issues with large files**
+- Process artifacts in smaller batches
+- Use more specific glob patterns
 
 ## License
 
