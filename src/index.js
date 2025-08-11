@@ -27,7 +27,7 @@ class ReleaseManager {
             createVersionedCopy: true,
             fileNameTemplate: '{basename}-{version}{ext}',
             latestFileTemplate: '{basename}-latest{ext}',
-            versionDirectories: ['major', 'minor', 'patch'],
+            versionDirectories: ['major', 'minor'], // Default to major and minor only
             preserveDirectory: false,
             copySourceMaps: true,
             generateManifest: true,
@@ -68,10 +68,26 @@ class ReleaseManager {
     }
 
     formatFileName(template, options = {}) {
-        const basename = options.basename || path.parse(options.filename || '').name;
-        const ext = options.ext || path.parse(options.filename || '').ext;
+        let basename = options.basename || path.parse(options.filename || '').name;
+        let ext = options.ext || path.parse(options.filename || '').ext;
         const version = options.version || this.version.full;
 
+        // Handle .min.* files properly - insert version before .min
+        if (basename.endsWith('.min')) {
+            const baseWithoutMin = basename.slice(0, -4); // Remove '.min'
+            const minExt = '.min' + ext; // Combine .min with original extension
+
+            return template
+                .replace('{basename}', baseWithoutMin)
+                .replace('{filename}', options.filename || basename + ext)
+                .replace('{version}', version)
+                .replace('{major}', this.version.major)
+                .replace('{minor}', this.version.minor)
+                .replace('{patch}', this.version.patch)
+                .replace('{ext}', minExt);
+        }
+
+        // Standard handling for non-minified files
         return template
             .replace('{basename}', basename)
             .replace('{filename}', options.filename || basename + ext)

@@ -134,9 +134,9 @@ describe('ReleaseManager', () => {
 
             await manager.release();
 
-            // Check if files were created
-            const versionedFile = path.join('releases', 'bundle.min-1.2.3.js');
-            const latestFile = path.join('releases', 'bundle.min-latest.js');
+            // Check if files were created (version should be before .min)
+            const versionedFile = path.join('releases', 'bundle-1.2.3.min.js');
+            const latestFile = path.join('releases', 'bundle-latest.min.js');
 
             expect(await fs.pathExists(versionedFile)).toBe(true);
             expect(await fs.pathExists(latestFile)).toBe(true);

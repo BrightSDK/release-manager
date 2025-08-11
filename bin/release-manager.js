@@ -3,7 +3,6 @@
 // LICENSE_CODE ZON
 
 const yargs = require('yargs');
-const path = require('path');
 const ReleaseManager = require('../src/index.js');
 
 async function main() {
