@@ -1,0 +1,41 @@
+{
+  "name": "@brightsdk/tool-release-manager",
+  "version": "1.0.0",
+  "description": "Universal release management tool for BrightSDK tool packages",
+  "main": "src/index.js",
+  "bin": {
+    "release-manager": "bin/release-manager.js"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "release": "node src/index.js",
+    "publish-release": "npm run release && npm publish"
+  },
+  "keywords": [
+    "release",
+    "artifacts",
+    "versioning",
+    "distribution",
+    "cdn",
+    "brightsdk"
+  ],
+  "author": "vladislavs@brightdata.com",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^11.3.0",
+    "glob": "^10.3.3",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-node": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
