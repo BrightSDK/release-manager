@@ -1,6 +1,6 @@
 {
   "name": "@bright-sdk/tool-release-manager",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Universal release management tool for BrightSDK tool packages",
   "main": "src/index.js",
   "bin": {
