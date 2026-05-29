@@ -6,12 +6,24 @@
   "bin": {
     "release-manager": "bin/release-manager.js"
   },
+  "files": [
+    "src",
+    "bin"
+  ],
   "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "release": "node src/index.js",
-    "publish-release": "npm run release && npm publish"
+    "validate": "npm run lint && npm run format:check && npm test",
+    "prepare": "husky"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BrightSDK/release-manager.git"
   },
   "keywords": [
     "release",
@@ -22,20 +34,28 @@
     "brightsdk"
   ],
   "author": "vladislavs@brightdata.com",
-  "license": "ISC",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BrightSDK/release-manager/issues"
+  },
+  "homepage": "https://github.com/BrightSDK/release-manager#readme",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "fs-extra": "^11.3.0",
     "glob": "^10.3.3",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n": "^17.15.0",
+    "eslint-plugin-promise": "^7.2.0",
+    "husky": "^9.1.0",
     "jest": "^29.7.0",
-    "jest-environment-node": "^29.7.0"
-  },
-  "engines": {
-    "node": ">=14.0.0"
-  },
-  "publishConfig": {
-    "access": "public"
+    "jest-environment-node": "^29.7.0",
+    "lint-staged": "^15.4.0",
+    "prettier": "^3.4.0"
   }
 }

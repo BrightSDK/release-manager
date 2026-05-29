@@ -2,15 +2,15 @@
 // Copy this file to your project as 'release.config.js'
 
 module.exports = {
-    // Required: Pattern to find your build artifacts
-    artifactsPattern: 'dist/**/*.{js,css,map}'
+  // Required: Pattern to find your build artifacts
+  artifactsPattern: 'dist/**/*.{js,css,map}',
 
-    // All other options have sensible defaults:
-    // - outputDir: 'releases'
-    // - versionDirectories: ['major', 'minor', 'patch', 'latest']
-    // - preserveDirectory: false
-    // - generateManifest: true
-    // - packageJsonPath: './package.json'
+  // All other options have sensible defaults:
+  // - outputDir: 'releases'
+  // - versionDirectories: ['major', 'minor', 'patch', 'latest']
+  // - preserveDirectory: false
+  // - generateManifest: true
+  // - packageJsonPath: './package.json'
 };
 
 // Common use cases:

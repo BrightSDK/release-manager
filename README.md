@@ -34,6 +34,7 @@ release-manager --artifacts "dist/**/*.{js,css,map}"
 ```
 
 This will:
+
 - Find all JS, CSS, and map files in your `dist` directory
 - Create 4 version directories: `v1/`, `v1.2/`, `v1.2.3/`, `latest/`
 - Copy files to each directory with individual manifests
@@ -95,7 +96,7 @@ Create a `release.config.js` file for minimal configuration:
 ```javascript
 module.exports = {
   // Glob pattern to find artifacts
-  artifactsPattern: 'dist/**/*.{js,css,map}'
+  artifactsPattern: 'dist/**/*.{js,css,map}',
 
   // All other options have sensible defaults:
   // - outputDir: 'releases'
@@ -122,7 +123,7 @@ module.exports = {
   preserveDirectory: true,
 
   // Optional: Generate manifest files (default: true)
-  generateManifest: true
+  generateManifest: true,
 };
 ```
 
@@ -158,10 +159,7 @@ Each directory contains a `manifest.json` with metadata:
 {
   "version": "1.2.3",
   "timestamp": "2024-01-15T10:30:00.000Z",
-  "files": [
-    "app.js",
-    "styles.css"
-  ]
+  "files": ["app.js", "styles.css"]
 }
 ```
 
@@ -221,7 +219,7 @@ const ReleaseManager = require('@brightsdk/release-manager');
 
 const manager = new ReleaseManager({
   artifactsPattern: 'dist/**/*.{js,css}',
-  outputDir: 'releases'
+  outputDir: 'releases',
 });
 
 async function release() {
@@ -242,7 +240,7 @@ release();
 const manager = new ReleaseManager({
   artifactsPattern: 'build/**/*',
   outputDir: 'cdn',
-  preserveDirectory: true
+  preserveDirectory: true,
 });
 
 // Find artifacts without processing
@@ -254,7 +252,7 @@ for (const artifact of artifacts) {
   if (artifact.endsWith('.js')) {
     await manager.processArtifact(artifact, {
       createVersioned: true,
-      createLatest: false
+      createLatest: false,
     });
   }
 }
@@ -304,7 +302,7 @@ Organize library builds for different consumption patterns:
 module.exports = {
   artifactsPattern: 'lib/**/*.{js,d.ts,css}',
   preserveDirectory: true, // Keep lib/ structure
-  versionDirectories: ['major', 'latest'] // Only major + latest
+  versionDirectories: ['major', 'latest'], // Only major + latest
 };
 ```
 
@@ -316,7 +314,7 @@ Organize documentation builds:
 module.exports = {
   artifactsPattern: 'docs/**/*.{html,css,js}',
   outputDir: 'gh-pages',
-  preserveDirectory: true
+  preserveDirectory: true,
 };
 ```
 
@@ -349,7 +347,7 @@ Control which version directories are created:
 ```javascript
 module.exports = {
   artifactsPattern: 'dist/**/*.js',
-  versionDirectories: ['major', 'latest'] // Only v1/ and latest/
+  versionDirectories: ['major', 'latest'], // Only v1/ and latest/
 };
 ```
 
@@ -367,14 +365,17 @@ module.exports = {
 ### Common Issues
 
 **No artifacts found**
+
 - Check your `artifactsPattern` glob matches your build output
 - Ensure artifacts exist before running release manager
 
 **Permission errors**
+
 - Make sure output directory is writable
 - Check file permissions on source artifacts
 
 **Memory issues with large files**
+
 - Process artifacts in smaller batches
 - Use more specific glob patterns
 

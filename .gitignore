@@ -1,5 +1,33 @@
+# Dependencies
 node_modules/
+
+# Coverage
 coverage/
+.nyc_output/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
 .DS_Store
-*.log
+Thumbs.db
+
+# Environment
 .env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Package manager locks (keep only one)
+yarn.lock
+pnpm-lock.yaml
+
+# Build artifacts
+*.tgz
