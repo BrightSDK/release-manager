@@ -56,21 +56,22 @@ async function main() {
         .argv;
 
     try {
-        // Build configuration from CLI args
-        const config = {
-            artifactsPattern: argv.artifacts,
-            outputDir: argv.output,
-            packageJsonPath: argv.package,
-            createVersionDirectories: !argv.noVersionDirs,
-            createLatestCopy: !argv.noLatest,
-            preserveDirectory: argv.preserveDirs
-        };
-
-        // Create ReleaseManager instance
+        // Create ReleaseManager instance from config file first
         const manager = await ReleaseManager.fromConfigFile(argv.config);
 
-        // Override with CLI options
-        Object.assign(manager.config, config);
+        // Only override with CLI args if explicitly provided (not defaults)
+        if (argv.artifacts !== 'dist/**/*.{js,css,map}')
+            manager.config.artifactsPattern = argv.artifacts;
+        if (argv.output !== 'releases')
+            manager.config.outputDir = argv.output;
+        if (argv.package !== './package.json')
+            manager.config.packageJsonPath = argv.package;
+        if (argv.noVersionDirs)
+            manager.config.createVersionDirectories = false;
+        if (argv.noLatest)
+            manager.config.createLatestCopy = false;
+        if (argv.preserveDirs)
+            manager.config.preserveDirectory = true;
 
         // Run the release
         await manager.release();
