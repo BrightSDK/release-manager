@@ -1,5 +1,11 @@
 # Release Manager
 
+[![Lint](https://github.com/BrightSDK/release-manager/actions/workflows/lint.yml/badge.svg)](https://github.com/BrightSDK/release-manager/actions/workflows/lint.yml)
+[![Test](https://github.com/BrightSDK/release-manager/actions/workflows/test.yml/badge.svg)](https://github.com/BrightSDK/release-manager/actions/workflows/test.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/BrightSDK/release-manager/pulls)
+
 A universal artifact management and distribution tool for organizing pre-built files into CDN-ready release structure. Works with any bundler (webpack, rollup, esbuild, etc.) by processing already-built artifacts.
 
 ## Features
