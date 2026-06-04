@@ -6,8 +6,10 @@ const os = require('os');
 describe('ReleaseManager', () => {
   let tempDir;
   let testPackageJson;
+  let originalCwd;
 
   beforeEach(async () => {
+    originalCwd = process.cwd();
     // Create temporary directory for tests
     tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'release-manager-test-'));
 
@@ -46,7 +48,9 @@ describe('ReleaseManager', () => {
   });
 
   afterEach(async () => {
-    // Clean up temp directory
+    // Restore CWD before removing tempDir — required on Windows (EBUSY) and
+    // for Jest coverage workers on Linux (spawn ENOENT with deleted CWD)
+    process.chdir(originalCwd);
     await fs.remove(tempDir);
   });
 
