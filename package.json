@@ -45,7 +45,7 @@
   "dependencies": {
     "fs-extra": "^11.3.0",
     "glob": "^10.3.3",
-    "yargs": "^17.7.2"
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "eslint": "^8.57.0",
