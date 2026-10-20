@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-20
+
+### Changed
+- Scope package under `@brightdata/bright-sdk-release-manager` to prevent npm dependency confusion attacks
+- Mark package as private to prevent unintended public registry publish
+
 ## [1.0.3] - 2026-05-29
 
 ### Added
